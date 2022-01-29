@@ -6,6 +6,7 @@ import string
 import time
 
 import aiohttp
+import socket
 
 from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
 from aiortc.contrib.media import MediaPlayer, MediaRecorder
@@ -36,12 +37,13 @@ class JanusPlugin:
 
 
 class JanusSession:
-    def __init__(self, url):
+    def __init__(self, url, local_addr):
         self._http = None
         self._poll_task = None
         self._plugins = {}
         self._root_url = url
         self._session_url = None
+        self._local_addr = local_addr
 
     async def attach(self, plugin_name: str) -> JanusPlugin:
         message = {
@@ -58,6 +60,9 @@ class JanusSession:
             return plugin
 
     async def create(self):
+        if(self._local_addr):
+            print(self._local_addr)
+            print("hige")
         self._http = aiohttp.ClientSession()
         message = {"janus": "create", "transaction": transaction_id()}
         async with self._http.post(self._root_url, json=message) as response:
@@ -222,14 +227,23 @@ if __name__ == "__main__":
     ),
     parser.add_argument("--play-from", help="Read the media from a file and sent it."),
     parser.add_argument("--record-to", help="Write received media to a file."),
+    parser.add_argument("--local-addr", help="Set local IP address")
     parser.add_argument("--verbose", "-v", action="count")
     args = parser.parse_args()
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
+    if args.local_addr:
+        try:
+            socket.inet_aton(args.local_addr)
+            # legal
+        except socket.error:
+           print("Invalid local IP address: "+args.local_addr)
+           exit(-1)
+
     # create signaling and peer connection
-    session = JanusSession(args.url)
+    session = JanusSession(args.url, args.local_addr)
 
     # create media source
     if args.play_from:
