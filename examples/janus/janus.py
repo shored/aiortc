@@ -185,7 +185,7 @@ async def subscribe(session, room, feed, recorder):
     await recorder.start()
 
 
-async def run(player, recorder, room, session):
+async def run(player, recorder, room, session, duration):
     await session.create()
 
     # join video room
@@ -217,7 +217,7 @@ async def run(player, recorder, room, session):
 
     # exchange media for 10 minutes
     print("Exchanging media")
-    await asyncio.sleep(600)
+    await asyncio.sleep(duration)
 
 
 if __name__ == "__main__":
@@ -232,6 +232,7 @@ if __name__ == "__main__":
     parser.add_argument("--play-from", help="Read the media from a file and sent it."),
     parser.add_argument("--record-to", help="Write received media to a file."),
     parser.add_argument("--local-addr", help="Set local IP address")
+    parser.add_argument("--duration", help="Set running time(default=600s)")
     parser.add_argument("--verbose", "-v", action="count")
     args = parser.parse_args()
 
@@ -249,6 +250,11 @@ if __name__ == "__main__":
     # create signaling and peer connection
     session = JanusSession(args.url, args.local_addr)
 
+    if args.duration:
+        duration = int(args.duration)
+    else:
+        duration = 600
+
     # create media source
     if args.play_from:
         player = MediaPlayer(args.play_from)
@@ -264,7 +270,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(
-            run(player=player, recorder=recorder, room=args.room, session=session)
+            run(player=player, recorder=recorder, room=args.room, session=session, duration=duration)
         )
     except KeyboardInterrupt:
         pass
