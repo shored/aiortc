@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import argparse
 import asyncio
 import logging
@@ -9,7 +11,7 @@ import aiohttp
 import socket
 
 from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
-from aiortc.contrib.media import MediaPlayer, MediaRecorder
+from aiortc.contrib.media import MediaPlayer, MediaRecorder, MediaBlackhole
 
 pcs = set()
 
@@ -207,8 +209,10 @@ async def run(player, recorder, room, session):
 
     # receive video
     if recorder is not None and publishers:
+        print(publishers[0])
+        publishers_feed = [i for i in publishers if i["display"]=="feeder"]
         await subscribe(
-            session=session, room=room, feed=publishers[0]["id"], recorder=recorder
+            session=session, room=room, feed=publishers_feed[0]["id"], recorder=recorder
         )
 
     # exchange media for 10 minutes
@@ -255,7 +259,7 @@ if __name__ == "__main__":
     if args.record_to:
         recorder = MediaRecorder(args.record_to)
     else:
-        recorder = None
+        recorder = MediaBlackhole()
 
     loop = asyncio.get_event_loop()
     try:
