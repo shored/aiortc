@@ -185,7 +185,7 @@ async def subscribe(session, room, feed, recorder):
     await recorder.start()
 
 
-async def run(player, recorder, room, session, duration):
+async def run(player, recorder, room, session, duration, display):
     await session.create()
 
     # join video room
@@ -193,7 +193,7 @@ async def run(player, recorder, room, session, duration):
     response = await plugin.send(
         {
             "body": {
-                "display": "aiortc",
+                "display": display,
                 "ptype": "publisher",
                 "request": "join",
                 "room": room,
@@ -233,6 +233,7 @@ if __name__ == "__main__":
     parser.add_argument("--record-to", help="Write received media to a file."),
     parser.add_argument("--local-addr", help="Set local IP address")
     parser.add_argument("--duration", help="Set running time(default=600s)")
+    parser.add_argument("--display", help="Set display name")
     parser.add_argument("--verbose", "-v", action="count")
     args = parser.parse_args()
 
@@ -267,10 +268,17 @@ if __name__ == "__main__":
     else:
         recorder = MediaBlackhole()
 
+    # set display name
+    if args.display:
+        display = args.display
+    else:
+        display = "aiortc"
+
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(
-            run(player=player, recorder=recorder, room=args.room, session=session, duration=duration)
+            run(player=player, recorder=recorder, room=args.room, session=session,
+                duration=duration, display=display)
         )
     except KeyboardInterrupt:
         pass
