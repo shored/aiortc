@@ -238,7 +238,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+        fmt = "%(created)f %(levelname)-5.5s [%(name)s] %(message)s"
+        logging.basicConfig(level=logging.DEBUG, format=fmt)
 
     if args.local_addr:
         try:
